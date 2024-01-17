@@ -1,12 +1,25 @@
 """
 Database models.
 """
+
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
+
+class UserManager(BaseUserManager):
+    """Create, save, return new user."""
+
+    def create_user(self, email, password=None, **extra_fields):
+        """Create a new user."""
+        user = self.model(email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+
+        return user
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
@@ -16,3 +29,5 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BoolenField(default=False)
 
     USERNAME_FIELD = 'email'
+
+    objects = UserManager()
