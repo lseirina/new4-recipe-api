@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 class ModelTests(TestCase):
 
     def test_create_user_model_with_email(self):
-        """Creating user model with email is success."""
+        """Test creating user model with email is success."""
         email = 'test@example.com'
         password = 'testpass123'
         user = get_user_model().objects.create_user(
@@ -18,4 +18,32 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(user.email, email)
-        self.assertEqual(user.check_password(password))
+        self.assertTrue(user.check_password(password))
+
+    def test_new_user_email_normolized(self):
+        """Test a new user email is normolized."""
+        email_samples = [
+            ['test1@EXAMPLE.com', 'test1@example.com'],
+            ['Test2@example.com', 'Test2@example.com'],
+            ['test3@example.COM', 'test3@example.com']
+        ]
+        for email, expected in email_samples:
+            user = get_user_model().objects.create_user(email=email, password='test123')
+            self.assertEqual(user.email, expected)
+
+    def test_raise_error_new_user_without_email(self):
+        """ValueError raises if a user does not have a email."""
+        with self.assertRaises(ValueError):
+            get_user_model().objects.create_user('', 'test123')
+
+    def test_create_super_user(self):
+        """Test creating super user success."""
+        email = 'test@example.com'
+        password = 'testpass123'
+        user = get_user_model().objects.create_superuser(
+            email=email,
+            password=password,
+        )
+
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
