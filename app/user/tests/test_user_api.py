@@ -60,6 +60,7 @@ class PublicUserApiTests(TestCase):
         ).exists()
         self.assertFalse(user_exist)
 
+
     def test_create_token_for_user(self):
         """Test to create a token for user."""
         user_details = {

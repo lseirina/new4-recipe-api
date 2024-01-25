@@ -20,6 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
         """Encrypt the password."""
         return get_user_model().objects.create_user(**validated_data)
 
+
 class AuthTokenSerializer(serializers.Serializer):
     """Serializer for the user with token."""
     email = serializers.EmailField()
@@ -32,7 +33,7 @@ class AuthTokenSerializer(serializers.Serializer):
         email = attrs.get('email')
         password = attrs.get('password')
         user = authenticate(
-            request = self.context.get('request')
+            request = self.context.get('request'),
             username=email,
             password=password,
         )
