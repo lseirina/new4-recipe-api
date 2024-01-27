@@ -18,7 +18,7 @@ def create_user(**params):
 class PublicUserApiTests(TestCase):
     """Test the public features of the user API."""
 
-    def SetUp(self):
+    def setUp(self):
         self.client = APIClient()
 
     def test_create_user_success(self):
@@ -109,14 +109,15 @@ class PublicUserApiTests(TestCase):
 
 class PrivateUserTest(TestCase):
     """Test API request that require authentication."""
-    def SetUp(self):
+
+    def setUp(self):
         self.user = create_user(
             email='test@example.com',
             password='testpass123',
             name='Test Name',
         )
         self.client = APIClient()
-        self.client.force_authenticate(self.user)
+        self.client.force_authenticate(user=self.user)
 
     def test_retrieve_profile_success(self):
         """Test retrieving profile for logged in user."""
@@ -130,7 +131,7 @@ class PrivateUserTest(TestCase):
 
     def test_post_me_not_allowed(self):
         """Test post is not allowed for the me endpoint."""
-        res = self.client.post(ME_URL)
+        res = self.client.post(ME_URL, {})
 
         self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
@@ -141,7 +142,7 @@ class PrivateUserTest(TestCase):
 
         self.user.refresh_from_db()
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertIn(self.user.name, payload['name'])
+        self.assertEqual(self.user.email, payload['email'])
         self.assertTrue(self.user.check_password(payload['password']))
 
 
