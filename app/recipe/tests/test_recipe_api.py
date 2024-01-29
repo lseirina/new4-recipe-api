@@ -17,16 +17,17 @@ RECIPES_URL = reverse('recipe: recipe-list')
 
 def create_recipe(**params):
     """Create and return a new recipe."""
-    default = {
+    defaults = {
         'title': 'New Title',
         'description': 'Some description',
         'time_minutes': 45,
         'price': Decimal('5.50'),
         'link': 'http//:example.com'
     }
-    default.update(params)
-    return default(user=user)
+    defaults.update(params)
 
+    recipe = Recipe.objects.create(user=user, **defaults)
+    return recipe
 
 
 class PublicRecipeAPITests(TestCase):
