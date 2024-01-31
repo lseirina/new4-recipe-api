@@ -18,6 +18,10 @@ from recipe.serializers import (
 
 RECIPES_URL = reverse('recipe:recipe-list')
 
+def create_user(**params):
+    """Create and return a new user."""
+    return get_user_model().objects.create_user(**params)
+
 def detail_url(recipe_id):
     """Url for recipe detail."""
     return reverse('recipe:recipe-detail', args=[recipe_id])
@@ -29,7 +33,7 @@ def create_recipe(user, **params):
         'description': 'Some description',
         'time_minutes': 45,
         'price': Decimal('5.50'),
-        'link': 'http//:example.com'
+        'link': 'http//:example.com/recipe.pdf'
     }
     defaults.update(params)
 
@@ -55,7 +59,7 @@ class PrivateRecipeTests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        self.user = get_user_model().objects.create_user(
+        self.user = create_user(
             email='test@example.com',
             password='testpass123',
         )
@@ -76,7 +80,7 @@ class PrivateRecipeTests(TestCase):
 
     def test_recipe_list_limited_to_user(self):
         """Test list of recipes limited to authenticated user."""
-        other_user = get_user_model().objects.create_user(
+        other_user = create_user(
             email='test1@example.com',
             password='testpass',
         )
@@ -116,6 +120,80 @@ class PrivateRecipeTests(TestCase):
         for k, v in payload.items():
             self.assertEqual(getattr(recipe, k), v)
         self.assertEqual(recipe.user, self.user)
+
+    def test_partial_update(self):
+        """Test partial update of the recipe."""
+        original_link = 'https://example.com/recipe.pdf'
+        recipe = create_recipe(
+            user=self.user,
+            title='Tample',
+            link=original_link
+        )
+        payload = {
+            'title': 'New Title'
+        }
+
+        url = detail_url(recipe.id)
+        res = self.client.patch(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.title, payload['title']),
+        self.assertEqual(recipe.link, original_link)
+        self.assertEqual(recipe.user, self.user)
+
+    def test_full_update(self):
+        """Test full update of a recipe."""
+        recipe = create_recipe(user=self.user)
+        payload = {
+            'title': "Pei",
+            'description': 'Another description',
+            'time_minutes': 50,
+            'price': Decimal('7.99'),
+            'link': 'https://example.com/recipe.pdf'
+        }
+
+        url = detail_url(recipe.id)
+        res = self.client.put(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        recipe.refresh_from_db()
+        for k, v in payload.items():
+            self.assertEqual(getattr(recipe, k), v)
+        self.assertEqual(recipe.user, self.user)
+
+    def test_update_user_returns_error(self):
+        """Test changing the recipe user results an error."""
+        new_user = create_user(email='new@example.com', password='pass1223')
+        recipe = create_recipe(user=self.user)
+        payload = {'user': new_user.id}
+
+        url = detail_url(recipe.id)
+        res = self.client.patch(url, payload)
+
+        recipe.refresh_from_db()
+        self.assertEqual(recipe.user, self.user)
+
+    def test_delete_recipe(self):
+        """Test deleting recipe successfull."""
+        recipe = create_recipe(user=self.user)
+
+        url = detail_url(recipe.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Recipe.objects.filter(id=recipe.id).exists())
+
+    def test_delete_other_user_recipe(self):
+        """Test deleting recipe of other user returns an error."""
+        new_user = create_user(email='newuser@example.com', password='test123')
+        recipe = create_recipe(user=new_user)
+
+        url = detail_url(recipe.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Recipe.objects.filter(id=recipe.id).exists())
 
 
 
