@@ -29,24 +29,41 @@ class PublicTagApiTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 class PrivateTagApiTest(TestCase):
-    """Test tags for authentication user."""
+    """Test for authenticated requests."""
 
     def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            email='test@example.com',
-            password='testpass123',
-        )
+        self.user = create_user()
         self.client = APIClient()
         self.client.force_authenticated(self.user)
 
     def test_retrieve_list_success(self):
-        """Test retrieving list of tags."""
+        """Test retrieving a list of tags."""
         Tag.objects.create(user=self.user, name='Desert')
         Tag.objects.create(user=self.user, name='Vegan')
+
         res = self.client.get(TAGS_URL)
 
-        tags = Tag.objects.all().order_by('-id')
+        tags = Tag.objects.all().order_by('-name')
         serializer = TagSerializer(tags, many=True)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
+
+    def test_tags_limited_to_user(self):
+        """Test list of tags is limited to authenticated user."""
+        another_user = get_user_model().objects.create_user(
+            email='user2@example.com',
+            password='testpass123'
+        )
+        tag = Tag.objects.create(user=self.user, name='Lunch')
+        Tag.objects.create(user=another_user, name='Desert')
+
+        res = self.client.get(TAGS_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 1)
+        self.assertEqual(res.data[0]['name'], tag.name)
+        self.assertEqual(res.data[0]['id'], tag.id)
+
+
+
