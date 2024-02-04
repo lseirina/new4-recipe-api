@@ -24,7 +24,7 @@ class PublicTagApiTest(TestCase):
 
     def test_retrieve_tags_unauthorized(self):
         """test requered authentication for retrieving tags."""
-        res = self.clent.get(TAGS_URL)
+        res = self.client.get(TAGS_URL)
 
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -34,7 +34,7 @@ class PrivateTagApiTest(TestCase):
     def setUp(self):
         self.user = create_user()
         self.client = APIClient()
-        self.client.force_authenticated(self.user)
+        self.client.force_authenticate(self.user)
 
     def test_retrieve_list_success(self):
         """Test retrieving a list of tags."""
