@@ -204,7 +204,7 @@ class PrivateRecipeTests(TestCase):
             'title': 'Pie',
             'time_minutes': 50,
             'price': Decimal('2.50'),
-            'tags': [{'name': 'Russian', 'name': 'Desert'}],
+            'tags': [{'name': 'Russian'}, {'name': 'Desert'}],
         }
         res = self.client.post(RECIPES_URL, payload, format='json')
 
@@ -218,7 +218,7 @@ class PrivateRecipeTests(TestCase):
                 name=tag['name'],
                 user=self.user,
             ).exists()
-            self.asserTrue(exists)
+            self.assertTrue(exists)
 
     def test_create_recipe_with_existing_tag(self):
         """Test creating a recipe with existing tags."""
@@ -227,7 +227,7 @@ class PrivateRecipeTests(TestCase):
             'title': 'Ice-cream',
             'time_minutes': 15,
             'price': Decimal('3.50'),
-            'tags': [{'name': 'Dessert', 'name': 'Vegan'}]
+            'tags': [{'name': 'Dessert'}, {'name': 'Vegan'}]
         }
 
         res = self.client.post(RECIPES_URL, payload, format='json')
