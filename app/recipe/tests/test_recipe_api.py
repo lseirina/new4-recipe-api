@@ -277,12 +277,12 @@ class PrivateRecipeTests(TestCase):
     def test_clear_tags(self):
         """Test clearing tags in recipe."""
         recipe = create_recipe(user=self.user)
-        tag = Tag.objects.create(user=self.user, name='Desert')
+        tag = Tag.objects.create(user=self.user, name='Dessert')
         recipe.tags.add(tag)
 
-        payload = {'tags': [{'name': []}]}
+        payload = {'tags': []}
         url = detail_url(recipe.id)
-        res = self.client.update(url, payload, format='json')
+        res = self.client.patch(url, payload, format='json')
 
-        self.assertequal(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(recipe.tags.count(), 0)

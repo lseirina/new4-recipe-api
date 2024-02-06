@@ -8,6 +8,9 @@ from core.models import (
     Tag
 )
 
+
+
+
 class TagSerializer(serializers.ModelSerializer):
     """Serializer for tag."""
     class Meta:
@@ -25,18 +28,36 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = ['id', 'title','time_minutes', 'price', 'link', 'tags']
         read_only_fields = ['id']
 
-    def create(self, validated_data):
-        """Create and return recipe with tags."""
-        tags = validated_data.pop('tags', [])
-        recipe = Recipe.objects.create(**validated_data)
+    def _get_or_create_tags(self, tags, recipe):
+        """Handle getting or creating tags as needed."""
         for tag in tags:
             tag_obj, created = Tag.objects.get_or_create(
                 user=self.context['request'].user,
                 name=tag['name']
-        )
+            )
             recipe.tags.add(tag_obj)
 
+
+    def create(self, validated_data):
+        """Create and return recipe with tags."""
+        tags = validated_data.pop('tags', [])
+        recipe = Recipe.objects.create(**validated_data)
+        self._get_or_create_tags(tags, recipe)
+
         return recipe
+
+    def update(self, instance, validated_data):
+        """SUpdate and return recipe with tag."""
+        tags = validated_data.pop('tags', None)
+        if tags is not None:
+            instance.tags.clear()
+            self._get_or_create_tags(tags, instance)
+
+        for attr, val in validated_data.items():
+            setattr(instance, attr, val)
+
+        instance.save()
+        return instance
 
 
 class RecipeDetailSerializer(RecipeSerializer):
