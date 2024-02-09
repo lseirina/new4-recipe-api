@@ -13,7 +13,10 @@ RUN python -m venv /py && \
         build-base postgresql-dev musl-dev zlib zlib-dev && \
     /py/bin/pip install -r /tmp/requirements.txt && \
     rm -rf /tmp && \
-    apk del .tmp-build-deps
+    apk del .tmp-build-deps && \
+    mkdir -p /vol/web/media && \
+    mkdir -p /vol/web/static && \
+    chmod -R 755 /vol
 
 ENV PATH="/py/bin:$PATH"
 
