@@ -36,7 +36,7 @@ def detail_url(recipe_id):
 
 def upload_image_url(recipe_id):
     """url for uploading image."""
-    return reverse('recipe:recipe-upload-image', arrgs=[recipe_id])
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
 
 def create_recipe(user, **params):
     """Create and return a new recipe."""
@@ -388,18 +388,19 @@ class UploadImageTest(TestCase):
         self.recipe.image.delete()
 
     def test_upload_image(self):
-        """"Test uploading image for recipe."""
-        with tempfile.NamedTemporaryFile(suffix='jpg') as image_file:
-            img = Image.new('RGB', 10/10)
-            image_file.save(img)
-            image_file.seek[0]
+        """"Test uploading an image to a recipe."""
+        url = upload_image_url(self.recipe.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            img = Image.new('RGB', (10, 10))
+            img.save(image_file, format='JPEG')
+            image_file.seek(0)
             payload = {'image': image_file}
-            url = upload_image_url(self.recipe.id)
-            res = self.client.post(url, payload, format='multpart')
+            res = self.client.post(url, payload, format='multipart')
 
-        self.recipe.refresh_from_db
+        self.recipe.refresh_from_db()
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertTrue(self.recipe.image.exists())
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.recipe.image.path))
 
 
 
