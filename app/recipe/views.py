@@ -26,6 +26,23 @@ from core.models import (
 )
 
 
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'tags',
+                OpenApiTypes.STR,
+                description='Comma seperated list of IDs to filter.',
+            ),
+            OpenApiParameter(
+                'ingredients',
+                OpenApiTypes.STR,
+                description='Comma seperated list of ingrdient IDs to filter.'
+            )
+        ]
+    )
+)
+
 class RecipeViewSet(viewsets.ModelViewSet):
     """View for manage recipe API."""
     serializer_class = serializers.RecipeDetailSerializer
