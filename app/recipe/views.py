@@ -64,11 +64,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(tags__id__in=tag_ids)
         if ingredients:
             ingredient_ids = self._params_to_integer(ingredients)
-            queryset = queryset.filter(tags__id__in=ingredient_ids)
+            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
 
         return queryset.filter(
             user=self.request.user
-        ).order_by('id').distinct()
+        ).order_by('-id').distinct()
 
 
     def get_serializer_class(self):
@@ -97,7 +97,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+@extend_schema_view(
+    list=extend_schema(
+        parameters=[
+            OpenApiParameter(
+                'assigned_only',
+                OpenApiTypes.INT, enum=[0, 1],
+                description='Filter by items to assigned recipes',
+            )
+        ]
+    )
+)
 class BaseRecipeAttrViewSet(mixins.DestroyModelMixin,
                            mixins.UpdateModelMixin,
                            mixins.ListModelMixin,
