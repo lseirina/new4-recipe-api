@@ -1,4 +1,6 @@
 """Test for tag api."""
+from decimal import Decimal
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -7,7 +9,10 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from core.models import Tag
+from core.models import (
+    Tag,
+    Recipe,
+    )
 from recipe.serializers import TagSerializer
 
 TAGS_URL = reverse('recipe:tag-list')
@@ -91,6 +96,33 @@ class PrivateTagApiTest(TestCase):
         self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
         tags = Tag.objects.filter(user=self.user)
         self.assertFalse(tags.exists())
+
+    def test_filter_tag_unikue(self):
+        """Test filtering tags limit to 1"""
+        tag = Tag.objects.create(user=self.user, name='lunch')
+        Tag.objects.create(user=self.user, name='Breakfast')
+        recipe1 = Recipe.objects.create(
+            user = self.user,
+            title = 'Cupcacke',
+            time_minutes = 40,
+            price = Decimal('2.80')
+        )
+        recipe2 = Recipe.objects.create(
+            user = self.user,
+            title = 'Vegan',
+            time_minutes = 40,
+            price = Decimal('2.80')
+        )
+        recipe1.tags.add(tag)
+        recipe2.tags.add(tag)
+
+        params = {'assigned_only': 1}
+        res = self.client.get(TAGS_URL, params)
+        self.assertEqual(len(res.data), 1)
+
+
+
+
 
 
 
