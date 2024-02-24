@@ -14,7 +14,7 @@ services:
       - DB_PASS=${DB_PASS}
       - SECRET_KEY=${DJANGO_SECRET_KEY}
       - ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
-      depends_on:
+    depends_on:
       - db
 
   db:
